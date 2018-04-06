@@ -10,49 +10,73 @@ if (process.env.NODE_ENV === 'production') {
     Types = RealPropTypes
 } else {
     const transformArgs = (arg) => {
-        return RealPropTypes[arg().type]
+        return typeof arg === 'function' ? RealPropTypes[arg().type] : arg
     }
 
     Wrapper = (readableProps) => {
         let propTypes = {}
         let properTypes = {}
 
+        function getName(args) {
+            return args.displayName || args.name || args
+        }
+
         Object.keys(readableProps)
             .sort()
             .map((p) => {
-            let propType
-            let properType
+                let propType
+                let properType
 
-            if (readableProps[p].ptc) {
-            const data = readableProps[p]()
-            const type = data.type
-
-            if (data.args === undefined) {
-                if (data.required) {
-                    propType = RealPropTypes[type].isRequired
-                    properType = type
-                } else {
-                    propType = RealPropTypes[type]
-                    properType = `[ ${type} ]`
+                const flattenArgs = (data) => {
+                    return data.args.map
+                        ? data.args
+                            .map(
+                                (v) =>
+                                    typeof v === 'string'
+                                        ? '"' + v + '"'
+                                        : typeof v === 'function'
+                                        ? v().type === 'instanceOf' ? getName(v().args) : v().type
+                                        : v
+                            )
+                            .join(' | ')
+                        : getName(data.args)
                 }
-            } else {
-                if (data.required) {
-                    propType = RealPropTypes[type](data.args.map(transformArgs)).isRequired
-                    properType = data.args.map((v) => v().type).join(' | ')
-                } else {
-                    propType = RealPropTypes[type](data.args.map(transformArgs))
-                    properType = '[ ' + data.args.map((v) => v().type).join(' | ') + ' ]'
-                }
-            }
-        } else {
-            // custom callback
-            propType = p
-            properType = 'function'
-        }
 
-        propTypes[p] = propType
-        properTypes[p] = properType
-    })
+                const mapArgs = (data) => {
+                    return data.args.map ? data.args.map(transformArgs) : data.args
+                }
+
+                if (readableProps[p].ptc) {
+                    const data = readableProps[p]()
+                    const type = data.type
+
+                    if (data.args === undefined) {
+                        if (data.required) {
+                            propType = RealPropTypes[type].isRequired
+                            properType = type
+                        } else {
+                            propType = RealPropTypes[type]
+                            properType = `[ ${type} ]`
+                        }
+                    } else {
+                        if (data.required) {
+                            propType = RealPropTypes[type](mapArgs(data)).isRequired
+                            properType = flattenArgs(data)
+                        } else {
+                            propType = RealPropTypes[type](mapArgs(data))
+
+                            properType = '[ ' + flattenArgs(data) + ' ]'
+                        }
+                    }
+                } else {
+                    // custom callback
+                    propType = p
+                    properType = 'function'
+                }
+
+                propTypes[p] = propType
+                properTypes[p] = properType
+            })
 
         return (Component) => {
             Component.propTypes = propTypes
@@ -79,7 +103,7 @@ if (process.env.NODE_ENV === 'production') {
                 type: type,
                 args: args,
                 isRequired: () => ({ type: type, args: args, required: true }),
-        })
+            })
 
             callback.ptc = true
 
