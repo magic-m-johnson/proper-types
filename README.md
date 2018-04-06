@@ -1,4 +1,4 @@
-# <img src='https://github.com/magic-m-johnson/proper-types/raw/master/logo.png' title='properTypes' />
+# <img src='https://github.com/magic-m-johnson/proper-types/raw/master/pt.png' title='properTypes' />
 
 A wrapper for making propTypes more useful in DEV environments
 
