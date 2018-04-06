@@ -1,0 +1,17 @@
+{
+  "name": "proper-types",
+  "version": "1.0.0",
+  "description": "propTypes wrapper for more accessibility",
+  "main": "index.js",
+  "repository": "https://github.com/magic-m-johnson/proper-types.git",
+  "author": "markus.michalsky <markus.michalsky@klarna.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "prop-types": "^15.6.1",
+    "recompose": "^0.26.0"
+  },
+  "peerDependencies": {
+    "prop-types": "^15.6.1",
+    "recompose": "^0.26.0"
+  }
+}
