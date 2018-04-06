@@ -15,7 +15,7 @@ A wrapper for making propTypes more useful in DEV environments
 
 Instead of using `PropTypes` and `setPropTypes` from `prop-types` and `recompose` import them from `proper-types`
 
-`import { PropTypes, setPropTypes } from './properTypes'`
+`import { PropTypes, setPropTypes } from 'proper-types'`
 
 ## Example
 
