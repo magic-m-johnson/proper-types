@@ -2,11 +2,21 @@
   "name": "proper-types",
   "version": "1.0.0",
   "description": "propTypes wrapper for more accessibility",
-  "main": "index.js",
+  "main": "build/node/index.js",
+  "browser": "build/web/index.js",
+  "files": [ "build/" ],
   "repository": "https://github.com/magic-m-johnson/proper-types.git",
   "author": "markus.michalsky <markus.michalsky@klarna.com>",
   "license": "MIT",
+  "scripts": {
+    "build:node": "BABEL_ENV=node babel index.js -d build/node/",
+    "build:web": "BABEL_ENV=web babel index.js -d build/web/",
+    "build": "NODE_ENV=production npm run build:node && npm run build:web",
+    "prepublishOnly": "npm run build"
+  },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
     "prop-types": "^15.6.1",
     "recompose": "^0.26.0"
   },
