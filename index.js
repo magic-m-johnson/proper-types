@@ -5,7 +5,7 @@ import { setPropTypes as setRealPropTypes } from 'recompose'
 let Wrapper
 let Types
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && process.env.PROPER_TYPES !== 'show') {
     Wrapper = setRealPropTypes
     Types = RealPropTypes
 } else {
