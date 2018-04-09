@@ -99,13 +99,15 @@ if (process.env.NODE_ENV === 'production') {
 
     const buildArgType = (type) => {
         return (args) => {
+            const innerCbk = () => ({ type: type, args: args, required: true })
             const callback = () => ({
                 type: type,
                 args: args,
-                isRequired: () => ({ type: type, args: args, required: true }),
+                isRequired: innerCbk,
             })
 
             callback.ptc = true
+            innerCbk.ptc = true
 
             return callback
         }
