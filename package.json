@@ -1,6 +1,6 @@
 {
   "name": "proper-types",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "propTypes wrapper for more accessibility",
   "main": "build/node/index.js",
   "browser": "build/web/index.js",
