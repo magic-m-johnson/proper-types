@@ -79,8 +79,8 @@ if (process.env.NODE_ENV === 'production' && process.env.PROPER_TYPES !== 'show'
             })
 
         return (Component) => {
-            Component.propTypes = propTypes
-            Component.properTypes = properTypes
+            Component.propTypes = { ...Component.propTypes, ...propTypes }
+            Component.properTypes = { ...Component.properTypes, ...properTypes}
 
             return Component
         }
