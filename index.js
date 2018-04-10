@@ -1,120 +1,111 @@
 import RealPropTypes from 'prop-types'
-import { setPropTypes as setRealPropTypes } from 'recompose'
+import { setPropTypes as setRealPropTypes, getContext as getRealContext, withContext as withRealContext } from 'recompose'
 
 // export depending on env
-let Wrapper
-let Types
+let setPropTypes
+let PropTypes
+let getContext
+let withContext
 
-if (process.env.NODE_ENV === 'production' && process.env.PROPER_TYPES !== 'show') {
-    Wrapper = setRealPropTypes
-    Types = RealPropTypes
-} else {
-    const transformArgs = (arg) => {
-        return typeof arg === 'function' ? RealPropTypes[arg().type] : arg
+const loop = (object, callback) => {
+    for (let i in object) {
+        object.hasOwnProperty(i) && callback(i, object[i])
+    }
+}
+
+const mapArgs = (args) => {
+    if (typeof args !== 'object') {
+        return args
     }
 
-    Wrapper = (readableProps) => {
+    let mappedArgs = args.length !== undefined ? [] : {}
+
+    loop(args, (key, arg) => {
+        if (arg && arg.ptc) {
+            if (RealPropTypes[arg.type]) {
+                let realArg
+
+                if (arg.args) {
+                    realArg = RealPropTypes[arg.type](...mapArgs(arg.args))
+                } else {
+                    realArg = RealPropTypes[arg.type]
+                }
+
+                if (arg.required) {
+                    realArg = realArg.isRequired
+                }
+
+                mappedArgs[key] = realArg
+            } else {
+                throw new Error(`Unknown propType ${arg.type}`)
+            }
+
+        } else {
+            mappedArgs[key] = typeof arg !== 'object' ? arg : mapArgs(arg)
+        }
+    })
+
+    return mappedArgs
+}
+
+if (process.env.NODE_ENV === 'production' && process.env.PROPER_TYPES !== 'show') {
+    setPropTypes = setRealPropTypes
+    PropTypes = RealPropTypes
+    getContext = getRealContext
+    withContext = withRealContext
+} else {
+    setPropTypes = (properProps) => (Component) => {
         let propTypes = {}
         let properTypes = {}
 
-        function getName(args) {
-            return args.displayName || args.name || args
-        }
+        loop(properProps, (key, prop) => {
+            let propType = {}
 
-        Object.keys(readableProps)
-            .sort()
-            .map((p) => {
-                let propType
-                let properType
-
-                const flattenArgs = (data) => {
-                    return data.args.map
-                        ? data.args
-                            .map(
-                                (v) =>
-                                    typeof v === 'string'
-                                        ? '"' + v + '"'
-                                        : typeof v === 'function'
-                                        ? v().type === 'instanceOf' ? getName(v().args) : v().type
-                                        : v
-                            )
-                            .join(' | ')
-                        : getName(data.args)
-                }
-
-                const mapArgs = (data) => {
-                    return data.args.map ? data.args.map(transformArgs) : data.args
-                }
-
-                if (readableProps[p].ptc) {
-                    const data = readableProps[p]()
-                    const type = data.type
-
-                    if (data.args === undefined) {
-                        if (data.required) {
-                            propType = RealPropTypes[type].isRequired
-                            properType = type
-                        } else {
-                            propType = RealPropTypes[type]
-                            properType = `[ ${type} ]`
-                        }
-                    } else {
-                        if (data.required) {
-                            propType = RealPropTypes[type](mapArgs(data)).isRequired
-                            properType = flattenArgs(data)
-                        } else {
-                            propType = RealPropTypes[type](mapArgs(data))
-
-                            properType = '[ ' + flattenArgs(data) + ' ]'
-                        }
-                    }
+            if (!prop || !prop.ptc) {
+                propTypes[key] = prop
+                properTypes[key] = prop === null ? 'null' : typeof prop
+            } else if (RealPropTypes[prop.type]) {
+                if (prop.args) {
+                    propType = RealPropTypes[prop.type](...mapArgs(prop.args))
                 } else {
-                    // custom callback
-                    propType = p
-                    properType = 'function'
+                    propType = RealPropTypes[prop.type]
                 }
 
-                propTypes[p] = propType
-                properTypes[p] = properType
-            })
+                if (prop.required) {
+                    propType = propType.isRequired
+                }
 
-        return (Component) => {
-            Component.propTypes = { ...Component.propTypes, ...propTypes }
-            Component.properTypes = { ...Component.properTypes, ...properTypes }
+                propTypes[key] = propType
+                properTypes[key] = { ...prop }
+            } else {
+                throw new Error(`Unknown propType ${prop.type}`)
+            }
+        })
 
-            return Component
-        }
+
+        Component.propTypes = { ...Component.propTypes, ...propTypes }
+        Component.properTypes = { ...Component.properTypes, ...properTypes }
+
+        return Component
     }
 
     const buildType = (type) => {
-        let callback
-
-        callback = () => ({ type: type })
-        callback.isRequired = () => ({ type: type, required: true })
-        callback.ptc = true
-        callback.isRequired.ptc = true
-
-        return callback
+        let reply = { type, ptc: true }
+        return { ...reply, isRequired: { ...reply, required: true } }
     }
 
     const buildArgType = (type) => {
-        return (args) => {
-            const innerCbk = () => ({ type: type, args: args, required: true })
-            const callback = () => ({
-                type: type,
-                args: args,
-                isRequired: innerCbk,
-            })
-
-            callback.ptc = true
-            innerCbk.ptc = true
-
-            return callback
+        return (...args) => {
+            let reply = { type, args, ptc: true }
+            return { ...reply, isRequired: { ...reply, required: true } }
         }
     }
 
+    getContext = (...context) => getRealContext(...mapArgs(context))
+    withContext = (...context) => withRealContext(...mapArgs(context))
+
     // propTypes <-> properTypes mapping
-    Types = {
+    PropTypes = {
         // simple types
         any: buildType('any'),
         array: buildType('array'),
@@ -136,4 +127,4 @@ if (process.env.NODE_ENV === 'production' && process.env.PROPER_TYPES !== 'show'
     }
 }
 
-export { Wrapper as setPropTypes, Types as PropTypes }
+export { setPropTypes, PropTypes, getContext, withContext }
