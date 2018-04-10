@@ -13,9 +13,9 @@ A wrapper for making propTypes more useful in DEV environments
 
 ## Usage
 
-Instead of using `PropTypes` and `setPropTypes` from `prop-types` and `recompose` import them from `proper-types`
+Instead of using `PropTypes` from `prop-types` and `setPropTypes`, `withContext` and `getContext` from `recompose` import them from `proper-types`
 
-`import { PropTypes, setPropTypes } from 'proper-types'`
+`import { PropTypes, setPropTypes, withContext, setContext } from 'proper-types'`
 
 ## Example
 
