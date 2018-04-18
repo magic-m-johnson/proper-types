@@ -9,7 +9,7 @@ A wrapper for making propTypes more useful in DEV environments
 
 ## Installation
 
-`yarn add --dev proper-types`
+`yarn add proper-types`
 
 ## Usage
 
